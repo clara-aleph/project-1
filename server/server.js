@@ -6,7 +6,9 @@ import { Client, handle_file } from "@gradio/client";
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: "https://jadi-lebih-baik.vercel.app"
+}));
 
 const upload = multer({ dest: "uploads/" });
 
