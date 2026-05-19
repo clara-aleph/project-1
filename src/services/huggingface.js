@@ -5,7 +5,7 @@ export const generateBetterImage = async (file) => {
     formData.append("image", file);
 
     const response = await fetch(
-        "http://localhost:3001/generate",
+        "https://project-1-server-lvku.onrender.com",
         {
             method: "POST",
             body: formData,
