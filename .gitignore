@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Environment variables (YOUR SECRETS - never upload this)
+.env
+
+# Uploaded images (temporary files)
+uploads/
+
+# Vite build output
+dist/
+
+# Mac system files
+.DS_Store
