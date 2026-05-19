@@ -41,12 +41,13 @@ app.post("/generate", upload.single("image"), async (req, res) => {
         res.json(result);
 
     } catch (error) {
-
         console.error("FULL ERROR:");
-        console.error(error);
+        console.error(error.message);
+        console.error(error.stack);
 
         res.status(500).json({
             error: "Generation failed",
+            detail: error.message  // this will show in your browser console
         });
     }
 });
