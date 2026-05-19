@@ -7,7 +7,10 @@ import { Client, handle_file } from "@gradio/client";
 const app = express();
 
 app.use(cors({
-    origin: "https://project-1-gold-chi.vercel.app"
+    origin: [
+        "https://project-1-gold-chi.vercel.app",
+        "http://localhost:5173"
+    ]
 }));
 
 const upload = multer({ dest: "uploads/" });
