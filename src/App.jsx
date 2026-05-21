@@ -29,7 +29,7 @@ function App() {
       setLoading(true);
 
       // Step 1: Generate AI image + get Gemini analysis
-      setStatus("Generating AI image...");
+      setStatus("Generating AI image... (this may take 8-15 minutes on free CPU)");
       const result = await generateBetterImage(selectedFile);
 
       if (!result?.data?.[0]?.url) {
