@@ -85,12 +85,15 @@ Berikan respons HANYA dalam format JSON berikut, tanpa teks lain di luar JSON:
   "summary": "Ringkasan singkat 1-2 kalimat tentang keseluruhan perbaikan"
 }
 
-Aturan:
+Aturan penting untuk needs_purchase:
+- needs_purchase = true HANYA jika perbaikan membutuhkan pembelian material fisik yang bisa dibeli di toko, contoh: cat, bahan bangunan, tanaman, lampu, paving block
+- needs_purchase = false untuk pekerjaan jasa atau tenaga manusia, contoh: membersihkan sampah, merapikan kabel, mengecat ulang (jika catnya sudah ada), memangkas tanaman, menyapu
+- Jangan beri link Tokopedia untuk pekerjaan kebersihan, pemangkasan, atau perapian yang hanya butuh tenaga
+- purchase_keyword hanya diisi jika needs_purchase = true, jika tidak isi dengan null
+
+Aturan lain:
 - Tulis dalam Bahasa Indonesia
 - Maksimal 6 perbaikan
-- needs_purchase = true jika membutuhkan pembelian material/barang
-- needs_purchase = false jika hanya membutuhkan tenaga/jasa
-- purchase_keyword hanya diisi jika needs_purchase = true, jika tidak isi dengan null
 - Fokus pada perbaikan yang benar-benar terlihat berbeda antara dua foto`;
 
         const geminiResult = await model.generateContent([
