@@ -28,8 +28,9 @@ function App() {
     try {
       setLoading(true);
 
-      // Step 1: Generate AI image + get Gemini analysis
-      setStatus("Generating AI image... (this may take 8-15 minutes on free CPU)");
+      // Step 1: Generate AI image directly from browser to Hugging Face
+      // This can take 8-15 minutes but won't timeout
+      setStatus("Generating AI image... (8-15 minutes on free CPU, please wait)");
       const result = await generateBetterImage(selectedFile);
 
       if (!result?.data?.[0]?.url) {
@@ -37,22 +38,43 @@ function App() {
       }
 
       const generatedImageUrl = result.data[0].url;
-      const analysis = result.analysis || null;
 
-      // Step 2: Upload original image to Supabase Storage
+      // Step 2: Get Gemini analysis from Render
+      setStatus("Analysing improvements...");
+      const analysisResponse = await fetch(
+        "https://project-1-server-lvku.onrender.com/analyse",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            originalUrl: null,
+            generatedUrl: generatedImageUrl,
+            file: null
+          })
+        }
+      );
+
+      // Analysis is optional — if it fails, continue anyway
+      let analysis = null;
+      if (analysisResponse.ok) {
+        const analysisData = await analysisResponse.json();
+        analysis = analysisData.analysis;
+      }
+
+      // Step 3: Upload original image to Supabase Storage
       setStatus("Saving original image...");
       const timestamp = Date.now();
       const originalFileName = `originals/${timestamp}-original.jpg`;
       const originalUrl = await uploadImage(selectedFile, originalFileName);
 
-      // Step 3: Fetch generated image and upload it
+      // Step 4: Fetch generated image and upload it
       setStatus("Saving generated image...");
       const generatedResponse = await fetch(generatedImageUrl);
       const generatedBlob = await generatedResponse.blob();
       const generatedFileName = `generated/${timestamp}-generated.jpg`;
       const savedGeneratedUrl = await uploadImage(generatedBlob, generatedFileName);
 
-      // Step 4: Save everything to the database
+      // Step 5: Save everything to database
       setStatus("Saving to database...");
       const generation = await saveGeneration(
         originalUrl,
@@ -62,7 +84,7 @@ function App() {
         analysis
       );
 
-      // Step 5: Redirect to result page
+      // Step 6: Redirect to result page
       navigate(`/result/${generation.id}`);
 
     } catch (error) {

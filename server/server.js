@@ -156,6 +156,58 @@ Aturan lain:
     }
 });
 
+app.post("/analyse", express.json(), async (req, res) => {
+    try {
+        const { generatedUrl } = req.body;
+
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+        const generatedBase64 = await urlToBase64(generatedUrl);
+
+        const prompt = `Kamu adalah seorang urban planner dan desainer lingkungan yang berpengalaman.
+
+Kamu diberikan foto kondisi lingkungan yang sudah diperbaiki oleh AI.
+
+Identifikasi perbaikan yang kemungkinan dilakukan berdasarkan foto tersebut.
+
+Berikan respons HANYA dalam format JSON berikut, tanpa teks lain di luar JSON:
+
+{
+  "fixes": [
+    {
+      "issue": "masalah yang kemungkinan ada sebelumnya",
+      "fix": "perbaikan yang terlihat",
+      "needs_purchase": true,
+      "purchase_keyword": "kata kunci pencarian (2-4 kata, bahasa indonesia, atau null)"
+    }
+  ],
+  "summary": "Ringkasan singkat 1-2 kalimat"
+}
+
+Aturan needs_purchase:
+- true HANYA untuk material fisik: cat, bahan bangunan, tanaman, lampu, paving block
+- false untuk jasa/tenaga: membersihkan, merapikan, memangkas, menyapu
+- purchase_keyword null jika needs_purchase false
+- Maksimal 6 perbaikan
+- Bahasa Indonesia`;
+
+        const geminiResult = await model.generateContent([
+            prompt,
+            { inlineData: { mimeType: "image/jpeg", data: generatedBase64 } }
+        ]);
+
+        const geminiText = geminiResult.response.text();
+        const cleaned = geminiText.replace(/```json|```/g, "").trim();
+        const analysis = JSON.parse(cleaned);
+
+        res.json({ analysis });
+
+    } catch (error) {
+        console.error("Analysis error:", error.message);
+        res.status(500).json({ error: "Analysis failed", detail: error.message });
+    }
+});
+
 app.listen(3001, () => {
     console.log("Server running on http://localhost:3001");
 });

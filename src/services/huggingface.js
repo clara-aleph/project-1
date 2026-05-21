@@ -1,20 +1,14 @@
+import { Client } from "@gradio/client"
+
 export const generateBetterImage = async (file) => {
 
-    const formData = new FormData();
+    // Connect directly to Hugging Face from the browser
+    // This bypasses Render's 30-second timeout entirely
+    const client = await Client.connect("clara-aleph/lebih-baik-gpt")
 
-    formData.append("image", file);
+    const result = await client.predict("/predict", {
+        image: file
+    })
 
-    const response = await fetch(
-        "https://project-1-server-lvku.onrender.com/generate",
-        {
-            method: "POST",
-            body: formData,
-        }
-    );
-
-    if (!response.ok) {
-        throw new Error("Failed to generate image");
-    }
-
-    return response.json();
-};
+    return result
+}
