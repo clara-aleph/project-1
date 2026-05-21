@@ -20,7 +20,7 @@ export const uploadImage = async (file, fileName) => {
     return urlData.publicUrl
 }
 
-export const saveGeneration = async (originalUrl, generatedUrl, userName, userLocation) => {
+export const saveGeneration = async (originalUrl, generatedUrl, userName, userLocation, analysis) => {
 
     const { data, error } = await supabase
         .from('generations')
@@ -29,6 +29,7 @@ export const saveGeneration = async (originalUrl, generatedUrl, userName, userLo
             generated_url: generatedUrl,
             user_name: userName,
             user_location: userLocation,
+            analysis: analysis,
         })
         .select()
 

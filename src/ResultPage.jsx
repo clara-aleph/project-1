@@ -36,6 +36,10 @@ function ResultPage() {
         setTimeout(() => setCopied(false), 2000);
     };
 
+    const getTokopediaUrl = (keyword) => {
+        return `https://www.tokopedia.com/search?st=product&q=${encodeURIComponent(keyword)}`;
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -54,6 +58,8 @@ function ResultPage() {
             </div>
         );
     }
+
+    const analysis = generation.analysis;
 
     return (
         <div className="min-h-screen bg-gray-100 p-6">
@@ -99,6 +105,62 @@ function ResultPage() {
                         />
                     </div>
                 </div>
+
+                {/* AI Analysis / Fix List */}
+                {analysis && analysis.fixes && analysis.fixes.length > 0 && (
+                    <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+                        <h2 className="font-semibold text-lg mb-1">🔧 Perbaikan yang Dilakukan</h2>
+
+                        {analysis.summary && (
+                            <p className="text-gray-500 text-sm mb-4">{analysis.summary}</p>
+                        )}
+
+                        <div className="space-y-3">
+                            {analysis.fixes.map((fix, index) => (
+                                <div
+                                    key={index}
+                                    className="flex items-start gap-3 p-3 bg-gray-50 rounded-xl"
+                                >
+                                    {/* Number badge */}
+                                    <div className="flex-shrink-0 w-7 h-7 bg-black text-white rounded-full flex items-center justify-center text-xs font-bold">
+                                        {index + 1}
+                                    </div>
+
+                                    {/* Fix content */}
+                                    <div className="flex-1">
+                                        <p className="text-sm text-gray-500 line-through">{fix.issue}</p>
+                                        <p className="text-sm font-medium text-gray-800">→ {fix.fix}</p>
+
+                                        {/* Shopping link if needed */}
+                                        {fix.needs_purchase && fix.purchase_keyword && (
+                                            <a
+                                                href={getTokopediaUrl(fix.purchase_keyword)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1 mt-1 text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-1 rounded-lg hover:bg-green-100 transition"
+                                            >
+                                                🛒 Cari "{fix.purchase_keyword}" di Tokopedia
+                                            </a>
+                                        )}
+                                    </div>
+
+                                    {/* Tag: purchase or labour */}
+                                    <div className="flex-shrink-0">
+                                        {fix.needs_purchase ? (
+                                            <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">
+                                                Beli material
+                                            </span>
+                                        ) : (
+                                            <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                                                Tenaga/jasa
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Share section */}
                 <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">

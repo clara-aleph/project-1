@@ -23,13 +23,12 @@ function App() {
   };
 
   const handleGenerate = async () => {
-
     if (!selectedFile) return;
 
     try {
       setLoading(true);
 
-      // Step 1: Generate AI image
+      // Step 1: Generate AI image + get Gemini analysis
       setStatus("Generating AI image...");
       const result = await generateBetterImage(selectedFile);
 
@@ -38,6 +37,7 @@ function App() {
       }
 
       const generatedImageUrl = result.data[0].url;
+      const analysis = result.analysis || null;
 
       // Step 2: Upload original image to Supabase Storage
       setStatus("Saving original image...");
@@ -58,7 +58,8 @@ function App() {
         originalUrl,
         savedGeneratedUrl,
         userName.trim() || "Anonymous",
-        userLocation.trim() || "Unknown"
+        userLocation.trim() || "Unknown",
+        analysis
       );
 
       // Step 5: Redirect to result page
@@ -138,24 +139,21 @@ function App() {
           {loading ? status || "Processing..." : "Generate Better Version"}
         </button>
 
-        {/* Subtle helper text */}
         <p className="text-center text-xs text-gray-400 mb-6">
           Nama dan kota bersifat opsional namun membantu kami memahami dampaknya.
         </p>
 
-        {/* Before / After preview */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {selectedImage && (
-            <div>
-              <h2 className="font-semibold mb-3">Original</h2>
-              <img
-                src={selectedImage}
-                alt="Original"
-                className="rounded-xl w-full"
-              />
-            </div>
-          )}
-        </div>
+        {/* Preview */}
+        {selectedImage && (
+          <div>
+            <h2 className="font-semibold mb-3">Original</h2>
+            <img
+              src={selectedImage}
+              alt="Original"
+              className="rounded-xl w-full"
+            />
+          </div>
+        )}
 
       </div>
     </div>
