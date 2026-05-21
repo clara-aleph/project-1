@@ -160,9 +160,32 @@ app.post("/analyse", express.json(), async (req, res) => {
     try {
         const { generatedUrl } = req.body;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        if (!generatedUrl) {
+            return res.status(400).json({ error: "No generatedUrl provided" });
+        }
 
-        const generatedBase64 = await urlToBase64(generatedUrl);
+        console.log("Fetching generated image for analysis:", generatedUrl);
+
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+
+        // Fetch the image with a timeout
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
+        const imageResponse = await fetch(generatedUrl, {
+            signal: controller.signal
+        });
+        clearTimeout(timeout);
+
+        if (!imageResponse.ok) {
+            throw new Error(`Failed to fetch image: ${imageResponse.status}`);
+        }
+
+        const arrayBuffer = await imageResponse.arrayBuffer();
+        const base64 = Buffer.from(arrayBuffer).toString("base64");
+        const mimeType = imageResponse.headers.get("content-type") || "image/jpeg";
+
+        console.log("Image fetched, sending to Gemini...");
 
         const prompt = `Kamu adalah seorang urban planner dan desainer lingkungan yang berpengalaman.
 
@@ -178,33 +201,44 @@ Berikan respons HANYA dalam format JSON berikut, tanpa teks lain di luar JSON:
       "issue": "masalah yang kemungkinan ada sebelumnya",
       "fix": "perbaikan yang terlihat",
       "needs_purchase": true,
-      "purchase_keyword": "kata kunci pencarian (2-4 kata, bahasa indonesia, atau null)"
+      "purchase_keyword": "kata kunci pencarian (2-4 kata, bahasa indonesia)"
     }
   ],
   "summary": "Ringkasan singkat 1-2 kalimat"
 }
 
 Aturan needs_purchase:
-- true HANYA untuk material fisik: cat, bahan bangunan, tanaman, lampu, paving block
-- false untuk jasa/tenaga: membersihkan, merapikan, memangkas, menyapu
-- purchase_keyword null jika needs_purchase false
+- true HANYA untuk material fisik yang bisa dibeli: tanaman, cat, lampu, paving block, bahan bangunan
+- false untuk jasa atau tenaga manusia: membersihkan, merapikan, memangkas, menyapu
+- purchase_keyword harus null jika needs_purchase false
 - Maksimal 6 perbaikan
-- Bahasa Indonesia`;
+- Tulis dalam Bahasa Indonesia`;
 
         const geminiResult = await model.generateContent([
             prompt,
-            { inlineData: { mimeType: "image/jpeg", data: generatedBase64 } }
+            {
+                inlineData: {
+                    mimeType: mimeType,
+                    data: base64
+                }
+            }
         ]);
 
         const geminiText = geminiResult.response.text();
+        console.log("Gemini raw response:", geminiText);
+
         const cleaned = geminiText.replace(/```json|```/g, "").trim();
         const analysis = JSON.parse(cleaned);
 
+        console.log("Analysis complete:", analysis);
         res.json({ analysis });
 
     } catch (error) {
         console.error("Analysis error:", error.message);
-        res.status(500).json({ error: "Analysis failed", detail: error.message });
+        res.status(500).json({
+            error: "Analysis failed",
+            detail: error.message
+        });
     }
 });
 
